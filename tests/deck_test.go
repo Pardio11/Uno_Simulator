@@ -3,10 +3,11 @@ package main
 import (
 	"os"
 	"testing"
+	"unoSimulator/internal/deck"
 )
 
 func TestNewDeck(t *testing.T) {
-	d := newDeck()
+	d := deck.NewDeck()
 
 	if len(d) != 108 {
 		t.Errorf("Length of new deck is not the expected.\nExpected: %v Actual length: %v",108,len(d))
@@ -15,9 +16,9 @@ func TestNewDeck(t *testing.T) {
 
 func TestSaveDeckAndLoadDeck(t *testing.T) {
 	os.Remove("_unoDeckTesting")
-	d := newDeck()
-	d.saveToFile("_unoDeckTesting")
-	loadDeck := newDeckFromFile("_unoDeckTesting")
+	d := deck.NewDeck()
+	d.SaveToFile("_unoDeckTesting")
+	loadDeck := deck.NewDeckFromFile("_unoDeckTesting")
 	passed := true
 	for i := range d {
 		if d[i]!=loadDeck[i]{
