@@ -19,3 +19,12 @@ func CreatePlayer(name string,d deck.Deck) (Player,error) {
 	}
 	return p, nil
 }
+ func (p *Player) TakeCard(d *deck.Deck)error{
+	c,dTable,err:=deck.Deal(*d,1)
+	*d=dTable
+	if err != nil{
+		return err
+	}
+	p.Deck = append(p.Deck, c[0])
+	return nil
+ }

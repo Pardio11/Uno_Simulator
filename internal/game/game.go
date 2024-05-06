@@ -2,6 +2,7 @@ package game
 
 import (
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"unoSimulator/internal/deck"
@@ -13,8 +14,10 @@ type Game struct{
 	id string
 	players players
 	deck deck.Deck
-	discardDeck discard.Discard
+	DiscardDeck discard.Discard
 	Turn int 
+	direction bool
+	cardCount int
 }
 
 type players []player.Player
@@ -45,7 +48,7 @@ func CreateGame(name string) (Game,error) {
 		id: id,
 		players: p,
 		deck: dGame,
-		discardDeck: discard.CreateDiscard(),
+		DiscardDeck: discard.CreateDiscard(),
 	}
 	return g,nil
 }
@@ -69,18 +72,49 @@ func (g *Game) AddPlayer(name string) error {
 }
 
 func (g *Game) StartGame() error {
-	if len(g.discardDeck)>0{
+	if len(g.DiscardDeck)>0{
 		return fmt.Errorf("Game is already started")
 	}
-	dDiscard,dGame,err:=deck.Deal(g.deck,1)
-	if err != nil {
-		return err
+	validTop:=false
+	for !validTop {
+		g.DiscardDeck.Discard(&(g.deck),len(g.deck)-1)
+		if g.DiscardDeck.TopCard().Color != "Any" {
+			validTop=true
+		}
 	}
-	g.discardDeck = discard.Discard(dDiscard)
-	g.deck = dGame
+	
 	return nil
 }
+func(g *Game) NextPlayer() *player.Player{
+	return &g.players[g.Turn]
+}
 
+func(g *Game) PlayTurn(index int, color string) error{
+	if index == -1{
+		err:=g.NextPlayer().TakeCard(&g.deck)
+		fmt.Println("took card")
+		if err !=nil{
+			return err
+		}
+		return nil
+	}else{
+		if index>=len(g.NextPlayer().Deck) && index<0{
+			return errors.New("index card does not exist")
+		}
+		card:=g.NextPlayer().Deck[index]
+		
+		if g.DiscardDeck.ValidPlay(card){
+			if card.Color =="Any"&&color!="Red"&&color!="Green"&&color!="Blue"&&color!="Yellow"{
+				return errors.New("must select valid color")
+			}
+			card.Color=color
+			g.playCard(index)
+			return nil
+		}
+		fmt.Printf("Invalid Play\n")
+		return errors.New("not valid card to play")
+	}
+}
 
 
 func generateRandomID(length int) (string, error) {
@@ -97,4 +131,11 @@ func generateRandomID(length int) (string, error) {
 	}
 
 	return string(bytes), nil
+}
+func (g *Game) CountCards(){
+	count:=len(g.deck)+len(g.DiscardDeck)
+	for _,player:= range g.players{
+		count+= len(player.Deck)
+	}
+	fmt.Printf("Total cards: %v\n",count)
 }

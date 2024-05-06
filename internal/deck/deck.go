@@ -38,7 +38,7 @@ func NewDeck() Deck {
 		}
 	}
 	for i := 0; i < 4; i++ {
-		card := Card{Color: "Any", Number:-1, }
+		card := Card{Color: "Any", Number:-1,Power: "wild" }
 		cards = append(cards, card)
 	}
 	for i := 0; i < 4; i++ {
@@ -73,6 +73,15 @@ func Deal(d Deck,  handSize int) (Deck, Deck,error) {
 		return nil, nil, fmt.Errorf("Deck size is smaller than hand requested\nDeck Size: %v, Hand Size:%v",len(d),handSize)
 	}
 	return d[:handSize],d[handSize:], nil
+}
+
+func (d Deck) CardExists(card Card) bool {
+	for _, c := range d {
+		if c.Color == card.Color && c.Number == card.Number && c.Power == card.Power {
+			return true
+		}
+	}
+	return false
 }
 
 func (d Deck) SaveToFile(fileName string) error {
