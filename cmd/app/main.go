@@ -26,6 +26,7 @@ func main (){
     router.HandleFunc("/", home.ServeHTTP)
 	godotenv.Load("../../.env")
 	go_port := os.Getenv("GO_PORT")
+	fmt.Println("Port:", go_port)
     http.ListenAndServe(go_port, router)
 
 	 fmt.Println("Running")
