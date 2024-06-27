@@ -22,9 +22,12 @@ type redisHandler struct {
 }
 
 func NewRedisHandler() *redisHandler{
-	godotenv.Load()
+	godotenv.Load("../../.env")
 	redisAddress := os.Getenv("REDIS_ADDRESS")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
+	fmt.Println("Redis Address:", redisAddress)
+    fmt.Println("Redis Password:", redisPassword)
+	
 	client := redis.NewClient(&redis.Options{
 		Addr: redisAddress,
 		Password: redisPassword,
