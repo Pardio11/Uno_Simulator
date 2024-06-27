@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -23,12 +24,12 @@ func main (){
     router.HandleFunc("/start_game", gameHandler.StartGame).Methods("POST")
 	router.HandleFunc("/play", gameHandler.PlayTurn).Methods("POST")
     router.HandleFunc("/", home.ServeHTTP)
-	godotenv.Load()
+	godotenv.Load("../../.env")
 	go_port := os.Getenv("GO_PORT")
     http.ListenAndServe(go_port, router)
 
-	/* fmt.Println("Running")
-	g,_:=game.CreateGame("Carlos")
+	 fmt.Println("Running")
+	/*g,_:=game.CreateGame("Carlos")
 	g.CountCards()
 	fmt.Printf("Pedro: %v\n",g.AddPlayer("Pedro"))
 	fmt.Printf("Romero: %v\n",g.AddPlayer("Romero"))
