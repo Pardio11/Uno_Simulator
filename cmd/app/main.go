@@ -2,8 +2,12 @@ package main
 
 import (
 	"net/http"
+	"os"
+
 	"unoSimulator/internal/handlers"
 	"unoSimulator/internal/store"
+
+	"github.com/joho/godotenv"
 
 	"github.com/gorilla/mux"
 )
@@ -19,7 +23,9 @@ func main (){
     router.HandleFunc("/start_game", gameHandler.StartGame).Methods("POST")
 	router.HandleFunc("/play", gameHandler.PlayTurn).Methods("POST")
     router.HandleFunc("/", home.ServeHTTP)
-    http.ListenAndServe(":8010", router)
+	godotenv.Load()
+	go_port := os.Getenv("GO_PORT")
+    http.ListenAndServe(go_port, router)
 
 	/* fmt.Println("Running")
 	g,_:=game.CreateGame("Carlos")
