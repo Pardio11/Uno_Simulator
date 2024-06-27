@@ -11,18 +11,18 @@ import (
 )
 
 type Game struct{
-	id string
-	players players
-	deck deck.Deck
-	DiscardDeck discard.Discard
-	Turn int 
-	direction bool
-	cardCount int
+	Id string `json:"id"`
+	Players players `json:"players"`
+	Deck deck.Deck `json:"deck"`
+	DiscardDeck discard.Discard `json:"discard"`
+	Turn int `json:"turn"`
+	Direction bool `json:"direction"`
+	CardCount int `json:"cardCount"`
 }
 
 type players []player.Player
 
-func CreateGame(name string) (Game,error) {
+func CreateGame() (Game,error) {
 	id,err:= generateRandomID(8)
 	if err != nil {
 		var g Game
@@ -31,44 +31,33 @@ func CreateGame(name string) (Game,error) {
 
 	d := deck.NewDeck()
 	d.Shuffle()
-	dPlayer, dGame,err := deck.Deal(d,7)
-	if err != nil {
-		var g Game
-		return g, err 
-	}
-
-	player,err := player.CreatePlayer(name,dPlayer)
-	if err != nil {
-		var g Game
-		return g, err 
-	}
-	p := players{player}
+	p := players{}
 
 	g := Game{
-		id: id,
-		players: p,
-		deck: dGame,
+		Id: id,
+		Players: p,
+		Deck: d,
 		DiscardDeck: discard.CreateDiscard(),
 	}
 	return g,nil
 }
 
-func (g *Game) AddPlayer(name string) error {
-	dPlayer, dGame,err := deck.Deal(g.deck, 7)
-
+func (g *Game) AddPlayer(name string) (player.Player,error) {
+	dPlayer, dGame,err := deck.Deal(g.Deck, 7)
+	var p player.Player
 	if err != nil {
-		return err
+		return p,err
 	}
 	
-	p, err := player.CreatePlayer(name, dPlayer)
+	p, err = player.CreatePlayer(name, dPlayer)
 
 	if err != nil {
-		return err
+		return p,err
 	}
 
-	g.deck=dGame
-	g.players = append(g.players, p)
-	return nil
+	g.Deck=dGame
+	g.Players = append(g.Players, p)
+	return p,nil
 }
 
 func (g *Game) StartGame() error {
@@ -77,7 +66,7 @@ func (g *Game) StartGame() error {
 	}
 	validTop:=false
 	for !validTop {
-		g.DiscardDeck.Discard(&(g.deck),len(g.deck)-1)
+		g.DiscardDeck.Discard(&(g.Deck),len(g.Deck)-1)
 		if g.DiscardDeck.TopCard().Color != "Any" {
 			validTop=true
 		}
@@ -85,29 +74,44 @@ func (g *Game) StartGame() error {
 	
 	return nil
 }
+
 func(g *Game) NextPlayer() *player.Player{
-	return &g.players[g.Turn]
+	return &g.Players[g.Turn]
 }
 
 func(g *Game) PlayTurn(index int, color string) error{
+	if len(g.Deck)<g.CardCount+1 {
+		g.joinDecks()
+	}
 	if index == -1{
-		err:=g.NextPlayer().TakeCard(&g.deck)
-		fmt.Println("took card")
-		if err !=nil{
-			return err
+		for i:=0;i<g.CardCount || i==0;i++{
+			err:=g.NextPlayer().TakeCard(&g.Deck)
+			fmt.Println("took card")
+			if err !=nil{
+				return err
+			}
 		}
+		g.CardCount=0
 		return nil
 	}else{
 		if index>=len(g.NextPlayer().Deck) && index<0{
 			return errors.New("index card does not exist")
 		}
 		card:=g.NextPlayer().Deck[index]
-		
-		if g.DiscardDeck.ValidPlay(card){
-			if card.Color =="Any"&&color!="Red"&&color!="Green"&&color!="Blue"&&color!="Yellow"{
-				return errors.New("must select valid color")
+		var pass bool
+		if g.CardCount>0{
+			pass=g.DiscardDeck.ValidPlusCardPlay(card)
+		}else{
+			pass=g.DiscardDeck.ValidPlay(card)
+		}
+		if pass {
+			if card.Color =="Any"{
+				if color!="Red"&&color!="Green"&&color!="Blue"&&color!="Yellow"{
+					return errors.New("must select valid color")
+				}
+				g.NextPlayer().Deck[index].Color=color
 			}
-			card.Color=color
+			
 			g.playCard(index)
 			return nil
 		}
@@ -116,6 +120,11 @@ func(g *Game) PlayTurn(index int, color string) error{
 	}
 }
 
+func (g *Game) joinDecks(){
+	g.Deck = append(g.Deck, g.DiscardDeck[:len(g.DiscardDeck)-1]...)
+	g.DiscardDeck=g.DiscardDeck[len(g.DiscardDeck)-1:]
+	g.Deck.Shuffle()
+}
 
 func generateRandomID(length int) (string, error) {
 	const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -132,9 +141,10 @@ func generateRandomID(length int) (string, error) {
 
 	return string(bytes), nil
 }
+
 func (g *Game) CountCards(){
-	count:=len(g.deck)+len(g.DiscardDeck)
-	for _,player:= range g.players{
+	count:=len(g.Deck)+len(g.DiscardDeck)
+	for _,player:= range g.Players{
 		count+= len(player.Deck)
 	}
 	fmt.Printf("Total cards: %v\n",count)

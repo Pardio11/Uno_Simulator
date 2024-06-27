@@ -6,30 +6,30 @@ func (g *Game) playCard(index int) {
 	g.DiscardDeck.Discard(deckPlayer, index)
 	switch {
 	case card.Power == "+4":
-		g.cardCount += 2
+		g.CardCount += 4
 		g.changeTurn()
 	case card.Power == "+2":
-		g.cardCount += 2
+		g.CardCount += 2
 		g.changeTurn()
 
 	case card.Power == "Skip":
 		g.changeTurn()
 
 	case card.Power == "Reverse":
-		g.direction = !g.direction
+		g.Direction = !g.Direction
 	}
 	g.changeTurn()
 
 }
 
 func (g *Game) changeTurn() {
-	if !g.direction {
-		g.Turn = (g.Turn + 1) % len(g.players)
+	if !g.Direction {
+		g.Turn = (g.Turn + 1) % len(g.Players)
 	} else {
 		if g.Turn-1 < 0 {
-			g.Turn = len(g.players) - 1
+			g.Turn = len(g.Players) - 1
 		} else {
-			g.Turn = (g.Turn - 1) % len(g.players)
+			g.Turn = (g.Turn - 1) % len(g.Players)
 		}
 	}
 }

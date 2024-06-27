@@ -19,6 +19,14 @@ func (d Discard) ValidPlay(c deck.Card) bool{
 	return false
 }
 
+func (d Discard) ValidPlusCardPlay(c deck.Card) bool{
+	topCard:=d[len(d)-1]
+	if((topCard.Power=="+2" && c.Power=="+2") || (topCard.Power=="+4" && c.Power=="+4")){
+		return true
+	}
+	return false
+}
+
 func (d *Discard) Discard(d2 *deck.Deck, n int){
 	*d = append(*d, (*d2)[n])
 	*d2 = append((*d2)[:n], (*d2)[n+1:]...)
